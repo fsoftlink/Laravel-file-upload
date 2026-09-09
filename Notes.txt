@@ -1,1 +1,391 @@
-Notes
+<?php
+
+use App\Http\Controllers\EmailController;
+use App\Http\Controllers\FileController;
+use App\Http\Controllers\WEB\UserController;
+use App\Http\Middleware\AuthUser;
+use Illuminate\Support\Facades\Route;
+
+//Route::get('/', function () {    return view('welcome');  });
+// Route::get('/dashboard', function () {   return view('user.dashboard');  });
+
+function gotoWeb($str = 'login'){    return ('web.' . $str);        }
+function gotoUser($str = 'dashboard'){    return ('user.' . $str);  }
+function gotoAdmin($str = 'dashboard'){    return ('admin.' . $str);  }
+
+//Web Routes
+Route::view('/', gotoWeb('login'));
+Route::view('/register', gotoWeb('register'))->name('register');
+Route::view('/login', gotoWeb('login'))->name('login');
+
+// Authentication Pages (GET)
+Route::view('/', gotoWeb('login'))->name('home');  // Landing page
+Route::view('/login', gotoWeb('login'))->name('login');
+Route::view('/register', gotoWeb('register'))->name('register');
+
+// Authentication (POST)
+Route::post('/login', [UserController::class, 'login'])->name('login.submit');
+Route::post('/register', [UserController::class, 'register'])->name('register.submit');
+
+// Public Actions
+Route::get('/send-mail', [EmailController::class, 'sendEmail'])->name('send.mail');
+Route::get('/logout', [UserController::class, 'logout'])->name('logout');
+
+
+
+Route::middleware(AuthUser::class)->group(function () {
+    // Web Pages
+    Route::view('/home', gotoWeb('home'))->name('web.home');
+    Route::view('/about', gotoWeb('about'))->name('web.about');
+    Route::view('/post', gotoWeb('post'))->name('web.post');
+    
+    // User Dashboard
+    Route::view('/dashboard', gotoUser('dashboard'))->name('user.dashboard');
+    Route::view('/profile', gotoUser('pg-profile'))->name('user.profile');
+    Route::view('/account', gotoUser('pg-account'))->name('user.account');
+    Route::view('/password', gotoUser('pg-password'))->name('user.password');
+    
+    // User POST Routes
+    Route::post('/profile', [UserController::class, 'profile'])->name('profile.submit');
+    Route::post('/account', [UserController::class, 'account'])->name('account.submit');
+    Route::post('/password', [UserController::class, 'password'])->name('password.submit');
+});
+
+// Route::view('/adding', 'adding');
+Route::post('/store', [FileController::class, 'store'])->name('store');
+Route::get('/adding', [FileController::class, 'index'])->name('adding');
+Route::get('/delete/{id}', [FileController::class, 'delete'])->name('delete');
+
+//Comments
+ /*   dd([
+        'check' => Auth::check(),
+        'user' => Auth::user(),
+        'id' => Auth::id(),
+        'session_id' => session()->getId(),
+        'session' => session()->all(),
+    ]);*/
+
+View
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Product Add</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+</head>
+
+<body>
+    <div class="container">
+        @if (session('success'))
+            <div class="alert alert-success">
+                <p>{{ session('success') }}</p>
+            </div>
+        @endif
+    </div>
+    <form class="container mt-5" method="POST" enctype="multipart/form-data" action="{{ route('store') }}">
+        @csrf
+        <div class="mb-3">
+            <label for="name" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+            <code>
+                @error('name')
+                    {{ $message }}
+                @enderror
+            </code>
+        </div>
+        <div class="mb-3">
+            <label for="price" class="form-label">Price</label>
+            <input type="number" class="form-control" id="price" name="price" required>
+            <code>
+                @error('price')
+                    {{ $message }}
+                @enderror
+            </code>
+        </div>
+        <div class="mb-3">
+            <label for="file" class="form-label">File</label>
+            <input type="file" class="form-control" id="file" name="file" accept="image/*" required>
+            <code>
+                @error('file')
+                    {{ $message }}
+                @enderror
+            </code>
+        </div>
+        {{-- <div class="mb-3">
+            <label for="gallery" class="form-label">Gallery</label>
+            <input type="file" class="form-control" id="gallery" name="gallery[]" required>
+        </div> --}}
+
+        <button type="submit" class="btn btn-primary">Add Product</button>
+
+    </form>
+    <hr />
+
+    <div class="container">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Image</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($rows as $row)
+                        <tr>
+                            <td>{{ $row->id }}</td>
+                            <td>{{ $row->name }}</td>
+                            <td>{{ $row->price }}</td>
+                            <td>
+                                <img class="view-image img-thumbnail"
+                                src="{{ asset('uploads/' . $row->file) }}" 
+                                alt="{{ asset('uploads/' . $row->file) }}"  
+                                width="80" height="80">
+                            </td>
+                            <td><a class="btn btn-danger btn-sm" href="{{route('delete',$row->id)}}">Delete</a></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {{-- <div class="container">
+        @if (session('rows'))
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (session('rows') as $row)
+                            <tr>
+                                <td>{{ $row->id }}</td>
+                                <td>{{ $row->name }}</td>
+                                <td>{{ $row->price }}</td>
+                                <td>
+                                    <img src="{{ asset('uploads/file/' . $row->file) }}" alt="{{ $row->name }}"
+                                        width="80" height="80">
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @endif
+    </div> --}}
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous">
+    </script>
+</body>
+
+</html>
+
+
+Controller
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\File;
+use Error;
+use Illuminate\Http\Request;
+
+class FileController extends Controller
+{
+    public function index(Request $req)
+    {
+        $rows = File::select()->get();
+        return view('adding', compact('rows'));
+    }
+    public function store(Request $req)
+    {
+        try {
+            $req->validate([
+                'file' => 'required|mimes:jpg,png,jpeg|max:2048',
+                'name' => 'required|string',
+                'price' => 'required',
+                //'gallery.*' => 'required|mimes:jpg,jpeg,png|max:2048', // validate each file
+            ]);
+
+            $extension = $req->file->extension();
+
+            $file = time() . '_' . rand(1000, 9999) . '.' . $extension;
+
+            // folder auto created
+            $req->file->move(public_path('uploads'), $file);
+
+            File::create([
+                'name' => $req->name,
+                'file' => $file,
+                'price' => $req->price,
+                'gallery' => $req->price,
+            ]);
+
+            //$rows = File::select('id', 'name', 'file', 'price')->get();
+            // $rows = File::all();
+            // return redirect()->back()->withSuccess('File Upload Success');
+            //return view('adding', compact('rows'))->withSuccess('File Upload Success');
+            $rows = File::select()->get();
+            return redirect()->back()->with([
+                'success' => 'File Upload Success',
+                'rows' => $rows
+            ]);
+        } catch (Error $e) {
+            return redirect()->back()->withErrors('File Upload Success');
+        }
+    }
+    public function store2(Request $req)
+    {
+        $req->validate([
+            'file' => 'required|mimes:jpg,png,jpeg|max:2048',
+            'name' => 'required|string',
+            'price' => 'required',
+            'gallery.*' => 'required|mimes:jpg,jpeg,png|max:2048', // validate each file
+        ]);
+
+        // Field name jisse file aayi hai
+        $fieldName = 'file'; // agar multiple fields hain to loop kar sakte ho
+
+        // Unique filename
+        $extension = $req->file($fieldName)->extension();
+        $fileName = time() . '_' . rand(1000, 9999) . '.' . $extension;
+
+        // Upload path: uploads/{fieldName}
+        $uploadPath = public_path('uploads/' . $fieldName);
+
+        // Agar folder exist nahi karta to create karo
+        if (!file_exists($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
+        // File move karo
+        $req->file($fieldName)->move($uploadPath, $fileName);
+
+        // Save DB record
+        File::create([
+            'name' => $req->name,
+            'file' => $fileName,
+            'price' => $req->price,
+            'gallery' => $fieldName, // optional: store folder info
+        ]);
+
+        return redirect()->back()->withSuccess('File Upload Success');
+    }
+
+    public function delete($id)
+    {
+        try {
+            $file = File::find($id);
+
+            if ($file) {
+                $path = public_path('uploads/' . $file->file);
+
+                // Agar actual file exist karti hai to delete karo
+                if (file_exists($path)) {        unlink($path);         }
+
+                // DB record delete
+                $file->delete();
+
+                // Success message
+                return redirect()->back()->with('success', 'File Delete Success');
+            } else {
+                // Agar record hi nahi mila
+                return redirect()->back()->with('error', 'File not found');
+            }
+        } catch (\Exception $e) {
+            // Agar koi exception aayi
+            return redirect()->back()->with('error', 'Delete failed: ' . $e->getMessage());
+        }
+    }
+
+
+    public function delete2($id)
+    {
+        $file = File::find($id);
+        if ($file) {
+            $path = public_path('uploads/' . $file->file);
+            if (file_exists($path)) {
+                unlink($path);
+            }
+            $file->delete();
+        }
+    }
+}
+
+
+
+Nodel
+
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
+
+class File extends Model
+{
+    use HasFactory, Notifiable;
+    // Explicitly set table name
+    protected $table = 'file';
+    protected $fillable = [
+        'file',
+        'price',
+        'name',
+        'gallery'
+    ];
+}
+
+
+
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+         Schema::create('file', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('file');
+            $table->string('gallery');
+            $table->string('price');
+        
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        //
+    }
+};
+
+
+
