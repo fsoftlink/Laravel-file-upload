@@ -1,1 +1,112 @@
 
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class welcomeEmail extends Mailable
+{
+    use Queueable, SerializesModels;
+    public $subject  = '';
+    public $details = [];
+    public $attachment = '';
+    
+    public function __construct($subject = '', $details=[])
+    {
+        $this->subject = $subject;
+        $this->details = $details;
+        if(isset($details['attachment'])){
+            $this->attachment = $details['attachment'];
+        }
+    }
+    
+    public function envelope(): Envelope
+    {
+        return new Envelope( 
+            subject: $this->subject  //subject: 'Welcomeemail',
+        );
+    }
+  
+    public function content(): Content
+    {
+        return new Content(
+            view: 'email',
+            with: [
+                'mailmessage' => $this->details['body'] ?? 'This is a test email sent from Laravel.',
+                'name' => $this->details['name'] ?? 'Kuldip Kumar',
+                'product' => $this->details['product'] ?? 'Demo Product',
+                'price' => $this->details['price'] ?? '0',
+            ],
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, Attachment>
+     */
+    public function attachments(): array
+    {
+        $files = [];
+        if($this->attachment){
+            $files[] = Attachment::fromPath(public_path('uploads/'.$this->attachment));
+        }
+        return $files;
+    }
+}
+
+Email controller
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Mail\welcomeEmail;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
+
+class Emailcontroller extends Controller
+{
+     public function sendEmail(Request $req) {
+
+       /* $validator = Validator::make($req->all(), [
+            'to_email' => 'required|email',
+            'message' => 'required|string|min:5|max:500',
+            'subject' => 'required|string|min:5|max:100',
+            //'attachment' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Optional attachment validation
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Optional attachment validation
+        ]);
+
+        if ($validator->fails()) {
+            return edie(['status' => 'error', 'message' =>  $validator->errors()->all()], 422);
+        }*/
+
+        $to = $req->to_email ?? 'kuldipsmart@gmail.com';
+        $cc = 'kuldipsmart@gmail.com';
+        $bcc = 'kuldipsmart@gmail.com';
+        
+        // ✅ CHANGE: Rename $message to $mailContent or $body
+        $mailContent = $req->message ?? "This is a test email sent from Laravel.";
+        $subject = $req->subject ?? 'New Message from Your Website';
+
+        $details = [
+            'name' => 'John Doe',
+            'product' => 'Example Product',
+            'price' => '19.99',
+            'body' => $mailContent,  // ✅ Add body to details
+            'attachment' => $req->hasFile('attachment') ? $req->file('attachment')->getClientOriginalName() : null,
+        ];
+
+        $return = Mail::to($to)->send(new welcomeEmail($subject, $details));
+        // $return = Mail::to($to)->cc($cc)->bcc($bcc)->send(new welcomeEmail($subject, $details));
+
+        return response()->json(['message' => 'Email sent successfully']);
+    }
+}
