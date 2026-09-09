@@ -1,0 +1,31 @@
+1. Laravel Install
+composer global require laravel/installer
+
+2. create laravel project
+laravel new example-app
+
+
+1 How to use core php helpers functions in laravel  : first add in composer this line
+
+"autoload": {
+    "files": [
+        "app/helpers.php"
+    ]
+}
+
+2. then run command in terminal
+composer dump-autoload
+
+3. cors file generate in config/cors.php   laravel/sanctum package install
+
+php artisan install:api
+
+4. cache clear
+php artisan optimize:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+5. Route List
+php artisan route:list
+php artisan route:list | findstr sanctum

@@ -1,0 +1,472 @@
+<?php
+//1.INSERT OPERATIONS {#insert}  Basic Insert
+ 
+// Single record insert
+$user = new User();
+$user->name = 'John Doe';
+$user->email = 'john@example.com';
+$user->password = Hash::make('password123');
+$user->save();
+
+// Using create() - Mass assignment
+$user = User::create([
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'password' => Hash::make('password123'),
+]);
+
+// Your code with password hashing
+$user = User::create([
+    'user_id' => $req->user_id,
+    'password' => Hash::make($req->password), // ✅ Always hash passwords
+    'name' => $req->name,
+    'email' => $req->email,
+]);
+
+// Insert without timestamps
+$user = User::create([
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+], ['timestamps' => false]);
+
+// Insert multiple records
+User::insert([
+    ['name' => 'John', 'email' => 'john@test.com'],
+    ['name' => 'Jane', 'email' => 'jane@test.com'],
+    ['name' => 'Bob', 'email' => 'bob@test.com'],
+]);
+
+// Insert or update (Upsert)
+User::upsert([
+    ['id' => 1, 'name' => 'Updated John', 'email' => 'john@new.com'],
+    ['id' => 2, 'name' => 'Updated Jane', 'email' => 'jane@new.com']
+], ['id'], ['name', 'email']); // uniqueBy: id, update: name, email
+
+// Insert with select
+$userId = User::insertGetId([
+    'name' => 'John Doe',
+    'email' => 'john@test.com',
+    'password' => Hash::make('password'),
+]);
+
+// First or Create (Find or create new)
+$user = User::firstOrCreate(
+    ['email' => 'john@test.com'], // Search criteria
+    ['name' => 'John Doe', 'password' => Hash::make('password')] // Additional data
+);
+
+// First or New (Find or create new instance)
+$user = User::firstOrNew(
+    ['email' => 'john@test.com'],
+    ['name' => 'John Doe']
+);
+$user->save(); // Must explicitly save
+
+// Update or Create
+$user = User::updateOrCreate(
+    ['email' => 'john@test.com'], // Search criteria
+    ['name' => 'John Doe', 'password' => Hash::make('password')] // Data to update
+);
+
+
+// 2.2️⃣ UPDATE OPERATIONS {#update}
+
+// Update by ID
+$user = User::find(1);
+$user->name = 'Updated Name';
+$user->email = 'updated@email.com';
+$user->save();
+
+// Update using update() method
+User::where('id', 1)->update([
+    'name' => 'Updated Name',
+    'email' => 'updated@email.com'
+]);
+
+// Update with increment/decrement
+User::where('id', 1)->increment('login_count'); // Increment by 1
+User::where('id', 1)->increment('login_count', 5); // Increment by 5
+User::where('id', 1)->decrement('points', 10); // Decrement by 10
+
+// Update with timestamps
+$user = User::find(1);
+$user->timestamps = false; // Disable timestamps
+$user->name = 'New Name';
+$user->save();
+
+// Update multiple with different values
+User::whereIn('id', [1, 2, 3])->update(['status' => 'active']);
+
+// Update except some records
+User::where('id', '!=', 1)->update(['status' => 'inactive']);
+
+// Update with conditions
+User::where('age', '>', 18)
+    ->where('status', 'pending')
+    ->update(['status' => 'approved']);
+
+// Chunk update (for large datasets)
+User::where('status', 'pending')->chunk(100, function ($users) {
+    foreach ($users as $user) {
+        $user->status = 'processed';
+        $user->save();
+    }
+});
+
+// Update with join
+DB::table('users')
+    ->join('posts', 'users.id', '=', 'posts.user_id')
+    ->where('posts.status', 'pending')
+    ->update(['users.status' => 'active']);
+	
+// 3. DELETE OPERATIONS {#delete}
+// Delete by ID
+$user = User::find(1);
+$user->delete();
+
+// Delete by ID directly
+User::destroy(1);
+User::destroy([1, 2, 3]); // Multiple IDs
+User::destroy(1, 2, 3);
+
+// Delete with conditions
+User::where('status', 'inactive')->delete();
+
+// Delete all
+User::truncate(); // Deletes all records and resets auto-increment
+
+// Soft Delete (if using SoftDeletes trait)
+$user = User::find(1);
+$user->delete(); // Sets deleted_at timestamp
+
+// Force delete (even with soft deletes)
+$user->forceDelete();
+
+// Restore soft deleted
+User::withTrashed()->where('id', 1)->restore();
+
+// Delete with join
+DB::table('users')
+    ->join('posts', 'users.id', '=', 'posts.user_id')
+    ->where('posts.deleted', true)
+    ->delete();
+
+// Delete with subquery
+User::whereIn('id', function($query) {
+    $query->select('user_id')
+          ->from('orders')
+          ->where('status', 'cancelled');
+})->delete();
+
+
+
+//4. WHERE CLAUSES {#where}
+
+// Simple where
+User::where('id', 1)->get();
+User::where('name', 'John')->get();
+User::where('age', '>', 18)->get();
+
+// Where with operators
+User::where('age', '=', 25)->get();
+User::where('age', '>', 18)->get();
+User::where('age', '>=', 18)->get();
+User::where('age', '<', 30)->get();
+User::where('age', '<=', 30)->get();
+User::where('name', '!=', 'John')->get();
+
+// Where with LIKE
+User::where('name', 'LIKE', 'John%')->get();
+User::where('name', 'LIKE', '%Doe%')->get();
+
+// Where with IN
+User::whereIn('id', [1, 2, 3, 4, 5])->get();
+User::whereIn('status', ['active', 'pending', 'approved'])->get();
+
+// Where with NOT IN
+User::whereNotIn('id', [1, 2, 3])->get();
+User::whereNotIn('status', ['inactive', 'banned'])->get();
+
+// Where with BETWEEN
+User::whereBetween('age', [18, 30])->get();
+User::whereBetween('created_at', ['2024-01-01', '2024-12-31'])->get();
+
+// Where with NOT BETWEEN
+User::whereNotBetween('age', [18, 30])->get();
+
+// Where with NULL
+User::whereNull('email_verified_at')->get();
+User::whereNull('deleted_at')->get();
+
+// Where with NOT NULL
+User::whereNotNull('email')->get();
+User::whereNotNull('phone_number')->get();
+
+// Where with DATE
+User::whereDate('created_at', '2024-01-01')->get();
+User::whereDate('created_at', '>=', '2024-01-01')->get();
+User::whereDate('created_at', '<', '2024-01-01')->get();
+
+// Where with TIME
+User::whereTime('created_at', '>=', '10:00:00')->get();
+
+// Where with DAY
+User::whereDay('created_at', '1')->get(); // 1st day of month
+User::whereDay('created_at', '>', '15')->get();
+
+// Where with MONTH
+User::whereMonth('created_at', '1')->get(); // January
+User::whereMonth('created_at', '>', '6')->get();
+
+// Where with YEAR
+User::whereYear('created_at', '2024')->get();
+User::whereYear('created_at', '>=', '2023')->get();
+
+// Where with JSON (MySQL)
+User::where('options->language', 'en')->get();
+User::whereJsonContains('options->languages', 'en')->get();
+User::whereJsonLength('options->tags', '>', 3)->get();
+
+// 5. ADVANCED WHERE CLAUSES {#advanced-where}
+
+// Multiple where conditions
+User::where('status', 'active')
+    ->where('age', '>', 18)
+    ->where('city', 'New York')
+    ->get();
+
+// OR Where
+User::where('status', 'active')
+    ->orWhere('status', 'pending')
+    ->get();
+
+// Nested Where with OR
+User::where('status', 'active')
+    ->orWhere(function($query) {
+        $query->where('age', '>', 18)
+              ->where('city', 'New York');
+    })->get();
+
+// Where with EXISTS
+User::whereExists(function($query) {
+    $query->select(DB::raw(1))
+          ->from('orders')
+          ->whereColumn('orders.user_id', 'users.id');
+})->get();
+
+// Where with NOT EXISTS
+User::whereNotExists(function($query) {
+    $query->select(DB::raw(1))
+          ->from('orders')
+          ->whereColumn('orders.user_id', 'users.id');
+})->get();
+
+// Raw Where
+User::whereRaw('age > ? AND status = ?', [18, 'active'])->get();
+User::whereRaw('DATEDIFF(created_at, NOW()) > 30')->get();
+
+// Where with Column comparison
+User::whereColumn('updated_at', '>', 'created_at')->get();
+User::whereColumn('salary', '>', 'bonus')->get();
+User::whereColumn('price', '>=', 'discount')->get();
+
+// Where with Subquery
+User::where('id', '=', function($query) {
+    $query->select('user_id')
+          ->from('orders')
+          ->where('status', 'pending')
+          ->orderBy('created_at', 'desc')
+          ->limit(1);
+})->get();
+
+// Where with Multiple conditions grouping
+User::where('status', 'active')
+    ->where(function($query) {
+        $query->where('age', '>', 18)
+              ->orWhere('parent_approved', true);
+    })
+    ->get();
+
+
+// 6. JOINS {#joins}
+// INNER JOIN
+User::join('posts', 'users.id', '=', 'posts.user_id')
+    ->select('users.*', 'posts.title', 'posts.body')
+    ->get();
+
+// LEFT JOIN
+User::leftJoin('posts', 'users.id', '=', 'posts.user_id')
+    ->select('users.*', 'posts.title as post_title')
+    ->get();
+
+// RIGHT JOIN
+User::rightJoin('posts', 'users.id', '=', 'posts.user_id')
+    ->get();
+
+// CROSS JOIN
+User::crossJoin('posts')
+    ->get();
+
+// ADVANCED JOIN with conditions
+User::join('posts', function($join) {
+    $join->on('users.id', '=', 'posts.user_id')
+         ->where('posts.status', '=', 'published')
+         ->where('posts.created_at', '>', now()->subDays(30));
+})->get();
+
+// JOIN with OR condition
+User::join('posts', function($join) {
+    $join->on('users.id', '=', 'posts.user_id')
+         ->orOn('users.id', '=', 'posts.author_id');
+})->get();
+
+// JOIN with multiple conditions
+User::join('posts', function($join) {
+    $join->on('users.id', '=', 'posts.user_id')
+         ->on('posts.status', '=', DB::raw('"published"'));
+})->get();
+
+// LEFT JOIN with NULL check
+User::leftJoin('posts', 'users.id', '=', 'posts.user_id')
+    ->whereNull('posts.id')
+    ->get();
+
+// JOIN with Subquery
+$subQuery = Post::select('user_id', DB::raw('COUNT(*) as post_count'))
+    ->groupBy('user_id');
+
+User::joinSub($subQuery, 'post_stats', function($join) {
+    $join->on('users.id', '=', 'post_stats.user_id');
+})->select('users.*', 'post_stats.post_count')->get();
+
+// JOIN with Raw
+User::join('posts', DB::raw('users.id'), '=', DB::raw('posts.user_id'))
+    ->get();
+
+// Multiple JOINS
+User::join('posts', 'users.id', '=', 'posts.user_id')
+    ->join('comments', 'posts.id', '=', 'comments.post_id')
+    ->select('users.*', 'posts.title', 'comments.body as comment')
+    ->get();
+
+// UNION
+$first = User::select('id', 'name', 'email')->where('status', 'active');
+$second = User::select('id', 'name', 'email')->where('status', 'pending');
+$users = $first->union($second)->get();
+
+// UNION ALL
+$first = User::select('id', 'name')->where('status', 'active');
+$second = User::select('id', 'name')->where('status', 'pending');
+$users = $first->unionAll($second)->get();
+
+
+//7. AGGREGATES & ADVANCED QUERIES {#aggregates}
+// Count
+$count = User::count();
+$count = User::where('status', 'active')->count();
+$count = User::distinct('status')->count('status');
+
+// Sum
+$total = User::sum('salary');
+$total = Order::where('status', 'completed')->sum('amount');
+
+// Average
+$average = User::avg('age');
+$average = Order::avg('total_amount');
+
+// Min
+$minAge = User::min('age');
+$minPrice = Product::min('price');
+
+// Max
+$maxAge = User::max('age');
+$maxSalary = Employee::max('salary');
+
+// Group By
+User::select('status', DB::raw('count(*) as total'))
+    ->groupBy('status')
+    ->get();
+
+User::select('city', 'status', DB::raw('count(*) as total'))
+    ->groupBy('city', 'status')
+    ->get();
+
+// Having
+User::select('status', DB::raw('count(*) as total'))
+    ->groupBy('status')
+    ->having('total', '>', 5)
+    ->get();
+
+User::select('city', DB::raw('avg(age) as avg_age'))
+    ->groupBy('city')
+    ->having('avg_age', '>', 25)
+    ->get();
+
+// Having with Raw
+User::select('status', DB::raw('count(*) as total'))
+    ->groupBy('status')
+    ->havingRaw('count(*) > 5')
+    ->get();
+
+// Distinct
+User::distinct('city')->get();
+User::select('city')->distinct()->get();
+User::distinct('status')->count();
+
+// Order By
+User::orderBy('name', 'asc')->get();
+User::orderBy('created_at', 'desc')->get();
+User::orderBy('name', 'asc')->orderBy('email', 'desc')->get();
+
+// Order By with Raw
+User::orderByRaw('FIELD(status, "active", "pending", "inactive")')->get();
+
+// Limit & Offset
+User::limit(10)->get();
+User::skip(10)->take(10)->get();
+User::offset(10)->limit(10)->get();
+
+// Pagination
+$users = User::paginate(15);
+$users = User::where('status', 'active')->paginate(10);
+$users = User::simplePaginate(10);
+$users = User::cursorPaginate(10);
+
+// Latest & Oldest
+User::latest()->get();
+User::oldest()->get();
+User::latest('created_at')->get();
+User::oldest('updated_at')->get();
+
+// Random
+User::inRandomOrder()->get();
+User::inRandomOrder()->first();
+
+CHEAT SHEET - Quick Reference
+Operation	Code
+Insert	User::create([...])
+Insert Multiple	User::insert([...])
+Update	User::where('id', 1)->update([...])
+Delete	User::where('id', 1)->delete()
+Find	User::find(1)
+Get All	User::all()
+Where	User::where('column', 'value')->get()
+Where In	User::whereIn('id', [1,2,3])->get()
+Where Not In	User::whereNotIn('id', [1,2,3])->get()
+Where Between	User::whereBetween('age', [18,30])->get()
+Where Null	User::whereNull('column')->get()
+Where Not Null	User::whereNotNull('column')->get()
+Join	User::join('table', 'col1', '=', 'col2')->get()
+Left Join	User::leftJoin('table', 'col1', '=', 'col2')->get()
+Group By	User::groupBy('column')->get()
+Having	User::having('count', '>', 5)->get()
+Order By	User::orderBy('column', 'asc')->get()
+Limit	User::limit(10)->get()
+Count	User::count()
+Sum	User::sum('column')
+Avg	User::avg('column')
+Min	User::min('column')
+Max	User::max('column')
+Latest	User::latest()->get()
+Chunk	User::chunk(100, function($users){...})
+?>

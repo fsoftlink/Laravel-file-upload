@@ -1,0 +1,129 @@
+1 git init karo
+git init
+
+2. git ignore pehle se persent rahta h . create .gitignotre, already persent in laravel
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+/aaFront
+
+3. add to git
+git add .
+
+3. git commit karo ab
+git commit -m "Initial commit"
+
+3. Global config username
+git config --global user.name "Kuldip"
+
+3. global config email
+git config --global user.email "fsoftlink@gmail.com"
+
+3. git list config
+git config --list
+
+
+
+3. ye repositry ka url h. usko git remote add origin <url> run karna h
+git remote add origin https://github.com/fsoftlink/Laravel-file-upload.git
+
+4. git remote -v se verify karo ki remote sahi set hua hai. result aisa aayega niche wale code jaisa
+git remote -v 
+
+
+origin  https://github.com/fsoftlink/Laravel-file-upload.git (fetch)
+origin  https://github.com/fsoftlink/Laravel-file-upload.git (push)
+
+
+4. current branch ka name forcefully main kartah
+git branch -M main
+
+6. -u ka mat upb upstream . matlab push karna
+git push -u origin main
+
+
+7. workflow
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/fsoftlink/Laravel-file-upload.git
+git push -u origin main
+
+
+
+
+*** Worlflot of tested from react project 
+npm create vite@latest app1
+
+# 1. Initialize git in your project folder
+git init
+
+# 2. Add your GitHub remote repository (replace with your repo URL)
+git remote add origin https://github.com/fsoftlink/React_Js_Practice_Vite.git
+
+# 3. Create a .gitignore file to exclude node_modules and other unwanted files
+echo "node_modules/" >> .gitignore
+echo ".env" >> .gitignore
+echo "dist/" >> .gitignore
+echo "notes.txt" >> .gitignore
+
+# 4. Stage all files except ignored ones
+git add .
+
+
+# 5. Commit your changes with a message
+git commit -m "Initial commit"
+
+# 6. Rename branch to main (GitHub default)
+git branch -M main
+
+# 7. Push to GitHub (first time push)
+git push -u origin main
+
+
+# 1. Set your global Git username (replace with your actual name)
+git config --global user.name "Kuldip"
+
+# 2. Set your global Git email (use the same email as your GitHub account)
+git config --global user.email "your_email@example.com"
+
+# Example:
+git config --global user.name "Kuldip"
+git config --global user.email "fsoftlink@gmail.com"
+
+
+# …or create a new repository on the command line
+echo "# React_Js_Practice_Vite" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/fsoftlink/React_Js_Practice_Vite.git
+git push -u origin main
+
+#…or push an existing repository from the command line
+git remote add origin https://github.com/fsoftlink/React_Js_Practice_Vite.git
+git branch -M main
+git push -u origin main
