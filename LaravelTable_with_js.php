@@ -1,73 +1,121 @@
+class ActionController extends Controller
+{
+    public function rowEdit(Request $req)
+    {
+        $data = $req->all();
+        $tblString = 'CustomerAddress';
+        $modelClass = "App\\Models\\" . $tblString;
+        if (class_exists($modelClass)) {
+            // Dynamically call model
+            //$rows = $modelClass::where('user_id', $user->email)->get();
+            return response()->json(['status' => 'success', 'message' => "Model  found!", 'data'=> $data]);
+        } else {
+            return response()->json(['status' => 'error', 'message' => "Model {$modelClass} not found!"]);
+        }
+    }
+
+    public function rowDelete(Request $req)
+    {
+        $data = $req->all();
+        $tblString = 'CustomerAddress';
+        $modelClass = "App\\Models\\" . $tblString;
+
+        if (class_exists($modelClass)) {
+            $model = app($modelClass); // Model ka object create hoga
+            //$rows = $model->where('user_id', $user->email)->get();
+            return response()->json(['status' => 'success', 'message' => "Model  found!", 'data'=> $data]);
+        }else{
+            return response()->json(['status' => 'error', 'message' => "Model {$modelClass} not found!"]);
+        }
+    }
+
+    public function rowInput(Request $req){
+        $data = $req->all();
+        return response()->json(['status' => 'success', 'message' => "Model Input found!", 'data'=> $data]);
+    }
+    public function rowSelect(Request $req){
+        $data = $req->all();
+        return response()->json(['status' => 'success', 'message' => "Model Select  found!", 'data'=> $data]);
+    }
+    public function rowRadio(Request $req){
+        $data = $req->all();
+        return response()->json(['status' => 'success', 'message' => "Model Radio found!", 'data'=> $data]);
+    }
+    public function rowCheckbox(Request $req){
+        $data = $req->all();
+        return response()->json(['status' => 'success', 'message' => "Model Checkbox found!", 'data'=> $data]);
+    }
+}
 class ProfileController extends Controller
 {
 	public function userShippingAddress()
-	{
-		$user = Auth::user();
-		//$address = CustomerAddress::where('user_id', $user->email)->where('status', 'Active')->first() ?? new CustomerAddress();
-		$address =  new CustomerAddress();
-		
-		$configTemp = [
-			'sl' => ['SL', '', false,'c','bold'],
-			'pk' => ['PK', '', false,'c','bold'],
-			'first_name' => ['First Name', '', false,'l','bold'],
-			'last_name' => ['Last Name', '', false,'l', false],
-			// 'phone' => ['Phone', '', false,'l', false],
-			// 'email' => ['Email', '',false,'l','normal'],
-			// 'city' => ['City', '',false,'l','normal'],
-			// 'state' => ['State', '',false,'l','normal'],
-			// 'zip' => ['Zip', '',false,'l','normal'],
-			'address' => ['address', '',false,'l','normal'],
-			'_del' => ['Delete', '',false,'l','normal'],
-			'_edit' => ['Edit', '',false,'l','normal'],
-			'_input' => ['Input', '',false,'l','normal'],
-		];
-		$thead = smsColumnConfig($configTemp);
+    {
+        $user = Auth::user();
+        //$address = CustomerAddress::where('user_id', $user->email)->where('status', 'Active')->first() ?? new CustomerAddress();
+        $address =  new CustomerAddress();
+        
+        $configTemp = [
+            'sl' => ['SL', '', false,'c','bold'],
+            'pk' => ['PK', '', false,'c','bold'],
+            'first_name' => ['First Name', '', false,'l','bold'],
+            'last_name' => ['Last Name', '', false,'l', false],
+            // 'phone' => ['Phone', '', false,'l', false],
+            // 'email' => ['Email', '',false,'l','normal'],
+            // 'city' => ['City', '',false,'l','normal'],
+            // 'state' => ['State', '',false,'l','normal'],
+            // 'zip' => ['Zip', '',false,'l','normal'],
+            'address' => ['address', '',false,'l','normal'],
+            '_del' => ['Delete', '',false,'l','normal'],
+            '_edit' => ['Edit', '',false,'l','normal'],
+            '_input' => ['Input', '',false,'l','normal'],
+            '_select' => ['Select', '',false,'l','normal'],
+        ];
+        $thead = smsColumnConfig($configTemp);
 
-		$tbody = [];
-		$rows = CustomerAddress::where('user_id',$user->email)->get();
-		foreach ($rows as $key => $row) {
-			//$del = json_encode(['id'=>$row->id,'tbl'=> 'CustomerAddress','action'=> route('front.updateShippingAddress'), 'callback'=>'myPostAsk']);
-			$del = json_encode(['pk'=> 'id' ,'pkv'=>$row->id,'tbl'=> 'CustomerAddress','action'=> route('front.rowDelete')]);
-			$edit = json_encode([
-				'pk'=> 'id' ,'pkv'=>$row->id, 'name'=> 'first_name' ,'value'=> $row->first_name, 
-				'tbl'=> 'CustomerAddress', 'action'=> route('front.rowEdit'),
-			]);
-			$options = [
-				['label'=>'Active', 'value'=>'Active', 'selected'=>false],
-				['label'=>'Dective', 'value'=>'Dective', 'selected'=>true],
-			];
-			$temp = [
-				'sl' => $key+1,
-				'pk' => $row->id,
-				'first_name' => $row->first_name,
-				'last_name' =>  $row->last_name ,
-				'phone' => $row->phone,
-				'email' => $row->email,
-				'city' => $row->city,
-				'state' => $row->state,
-				'zip' => $row->zip,
-				'address' => $row->address,
-				'_del' => ['payload'=>$del, 'func'=>'myPostAsk'],
-				'_edit' => ['payload'=>$edit, 'func'=>'myPostAsk'],
-				'_input' => ['payload'=>$edit, 'func'=>'myPostAsk','type'=> 'text', 'value'=>$row->first_name ], 
-				'_select' => ['payload'=>$edit,  'func'=>'myPostAsk','type'=> 'select','value'=>$row->status, 'option'=>$options ], 
-			];
-			$tbody[] = array_intersect_key($temp, array_flip(array_keys($thead)));   //break;
-		}
-		$role = 'admin';
-		$return = [
-			'role'=> $role,
-			'right'=> in_array($role, ['admin','principal']) ? 'edit':'view',
-			'skip_keys'=> in_array($role, ['admin2']) ? []:['pk'],
-			'checkbox' => in_array($user->role, ['admin','principal']) ? false : false,
-			'thead'=> $thead,
-			'tbody'=> $tbody,
-		];
+        $tbody = [];
+        $rows = CustomerAddress::where('user_id',$user->email)->get();
+        foreach ($rows as $key => $row) {
+            //$del = json_encode(['id'=>$row->id,'tbl'=> 'CustomerAddress','action'=> route('front.updateShippingAddress'), 'callback'=>'myPostAsk']);
+            $del = json_encode(['pk'=> 'id' ,'pkv'=>$row->id,'tbl'=> 'CustomerAddress','action'=> route('front.rowDelete')]);
+            $edit = json_encode([
+                'pk'=> 'id' ,'pkv'=>$row->id, 'name'=> 'first_name' ,'value'=> $row->first_name, 
+                'tbl'=> 'CustomerAddress', 'action'=> route('front.rowSelect'),
+            ]);
+            $option = [
+                ['label'=>'Active', 'value'=>'Active', 'selected'=>false],
+                ['label'=>'Dective', 'value'=>'Dective', 'selected'=>true],
+            ];
+            $temp = [
+                'sl' => $key+1,
+                'pk' => $row->id,
+                'first_name' => $row->first_name,
+                'last_name' =>  $row->last_name ,
+                'phone' => $row->phone,
+                'email' => $row->email,
+                'city' => $row->city,
+                'state' => $row->state,
+                'zip' => $row->zip,
+                'address' => $row->address,
+                '_del' => ['payload'=>$del, 'func'=>'myPostAsk'],
+                '_edit' => ['payload'=>$edit, 'func'=>'myPostAsk'],
+                '_input' => ['payload'=>$edit, 'func'=>'myPostAsk','type'=> 'text', 'value'=>$row->first_name ], 
+                '_select' => ['payload'=>$edit,  'func'=>'myPostAsk','type'=> 'select', 'option'=>$option ], 
+            ];
+            $tbody[] = array_intersect_key($temp, array_flip(array_keys($thead)));   //break;
+        }
+        $role = 'admin';
+        $return = [
+            'role'=> $role,
+            'right'=> in_array($role, ['admin','principal']) ? 'edit':'view',
+            'skip_keys'=> in_array($role, ['admin2']) ? []:['pk'],
+            'checkbox' => in_array($user->role, ['admin','principal']) ? false : false,
+            'thead'=> $thead,
+            'tbody'=> $tbody,
+        ];
 
-		return view('front.profile.address', compact('address', 'return'));
-	}
+        return view('front.profile.address', compact('address', 'return'));
+    }
 }
-
 function smsColumnConfig($config = [], $keyword = ''){
     $arr = [];
     $defaultValues = ['label' => '', 'filter' => '', 'edit' => false, 'align' => 'l', 'fw'=>'normal']; 
@@ -169,6 +217,7 @@ function smsTable($resData = [], $divId = '') {
             $funcName = (is_array($rowVal) && isset($rowVal['func'])) ? $rowVal['func'] : 'na';
             $inputType = (is_array($rowVal) && isset($rowVal['type'])) ? $rowVal['type'] : 'text';
             $inputVal = (is_array($rowVal) && isset($rowVal['value'])) ? $rowVal['value'] : '';
+            $selectOption = (is_array($rowVal) && isset($rowVal['option'])) ? $rowVal['option'] : [];
 
             if (str_ends_with($key, '_del')) {
                 $rowVal = "<button class='btn btn-sm btn-danger' data-payload='{$payload}' data-func='{$funcName}'>Delete</button>";
@@ -180,7 +229,18 @@ function smsTable($resData = [], $divId = '') {
                 $rowVal = "<input type='{$inputType}' class='form-control' value='{$inputVal}' data-payload='{$payload}' data-func='{$funcName}'>";
             }
             if (str_ends_with($key, '_select')) {
-                $rowVal = "<button class='btn btn-sm btn-primary' data-payload='{$rowVal}' data-func='{$funcName}'>select</button>";
+
+                $optionHtml = '<option value="">-- Select --</option>';
+                if (is_array($selectOption)) {
+                    foreach ($selectOption as $option) {
+                        $selected = $option['selected'] ? 'selected' : '';
+                        $optionHtml .= "<option value='{$option['value']}'>{$option['label']}</option>";
+                    }
+                }
+
+                $rowVal = "<select class='form-select form-select-sm' data-payload='{$payload}' data-func='{$funcName}'>
+                                {$optionHtml}
+                        </select>";
             }
 
             echo "<td class='{$align}' nowrap='nowrap'>{$rowVal}</td>";
@@ -190,8 +250,6 @@ function smsTable($resData = [], $divId = '') {
     echo "</tbody></table>";
     echo "</div>";
 }
-
-
 
 
 
@@ -458,6 +516,7 @@ function handleElementAction(element, eventType) {
     let selectedText = '';
     if (element.tagName === 'SELECT') {
         selectedText = element.options[element.selectedIndex]?.text;
+        payload.value = element.value;
     }
     
     if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
