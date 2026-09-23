@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laravel Modern Alerts</title>
+
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        /* Custom Styling for Tinted Background & Proper Alignment */
+        .custom-alert {
+            border: 1px solid transparent;
+            padding: 0.75rem 1rem;
+        }
+        
+        .custom-alert-danger {
+            background-color: #f8d7da !important;
+            border-color: #f5c2c7 !important;
+            color: #842029 !important;
+            border-left: 5px solid #dc3545 !important;
+        }
+
+        .custom-alert-success {
+            background-color: #d1e7dd !important;
+            border-color: #badbcc !important;
+            color: #0f5132 !important;
+            border-left: 5px solid #198754 !important;
+        }
+
+        /* Fix Close Button Alignment */
+        .custom-alert .btn-close {
+            position: relative;
+            top: 0;
+            right: 0;
+            padding: 0.5rem;
+            margin-left: auto;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="bg-light p-4">
+
+    <div class="container" style="max-width: 600px;">
+        
+        <!-- ==================== ALERT MESSAGES SECTION ==================== -->
+        <div class="alert-container">
+            
+            <!-- Error Alert -->
+            @if (Session::has('error'))
+            <div class="alert custom-alert custom-alert-danger alert-dismissible fade show rounded-3 d-flex align-items-center my-auto-alert" role="alert">
+                <div class="rounded-circle bg-danger bg-opacity-25 p-2 d-flex align-items-center justify-content-center me-3 text-danger" style="width: 36px; height: 36px; flex-shrink: 0;">
+                    <i class="bi bi-x-lg fw-bold"></i>
+                </div>
+                <div class="flex-grow-1 me-2">
+                    <strong class="d-block" style="font-size: 0.9rem;">Error</strong>
+                    <span class="small d-block opacity-75" style="font-size: 0.85rem; line-height: 1.2;">{{ Session::get('error') }}</span>
+                </div>
+                <button type="button" class="btn-close align-self-center" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
+
+            <!-- Success Alert -->
+            @if (Session::has('success'))
+            <div class="alert custom-alert custom-alert-success alert-dismissible fade show rounded-3 d-flex align-items-center my-auto-alert" role="alert">
+                <div class="rounded-circle bg-success bg-opacity-25 p-2 d-flex align-items-center justify-content-center me-3 text-success" style="width: 36px; height: 36px; flex-shrink: 0;">
+                    <i class="bi bi-check-lg fw-bold"></i>
+                </div>
+                <div class="flex-grow-1 me-2">
+                    <strong class="d-block" style="font-size: 0.9rem;">Success</strong>
+                    <span class="small d-block opacity-75" style="font-size: 0.85rem; line-height: 1.2;">{{ Session::get('success') }}</span>
+                </div>
+                <button type="button" class="btn-close align-self-center" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            @endif
+
+        </div>
+        <!-- ==================== END ALERT MESSAGES ==================== -->
+
+    </div>
+
+    <!-- Bootstrap 5.3 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auto-dismiss Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                let alerts = document.querySelectorAll('.my-auto-alert');
+                alerts.forEach(function (alert) {
+                    let bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                    if (bsAlert) {
+                        bsAlert.close();
+                    }
+                });
+            }, 4000);
+        });
+    </script>
+</body>
+</html>
